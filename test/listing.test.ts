@@ -84,3 +84,14 @@ test("estimates a price when only shared keywords match", () => {
   assert.equal(suggestion.drafts.length, 1);
   assert.equal(suggestion.drafts[0]?.category, "Otros");
 });
+
+test("falls back to both marketplaces when requestedPlatforms is empty", () => {
+  const suggestion = createListingSuggestion({
+    shortDescription: "Nintendo Switch com dois jogos",
+    photos: ["/photos/switch.jpg"],
+    requestedPlatforms: [],
+  });
+
+  assert.deepEqual(Object.keys(suggestion.categorySuggestions).sort(), ["ebay.es", "olx.pt"]);
+  assert.equal(suggestion.drafts.length, 2);
+});

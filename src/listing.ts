@@ -144,7 +144,7 @@ function buildTitle(input: ListingInput): string {
     .map((value) => value.trim());
   const rawTitle = baseParts.join(" - ").slice(0, 80);
 
-  return rawTitle || "Artículo en venta";
+  return rawTitle || "Listing draft";
 }
 
 function buildDescription(
@@ -188,9 +188,9 @@ function buildDescription(
 }
 
 function getCategorySuggestions(title: string, shortDescription: string): Record<Marketplace, string> {
-  const haystack = normalizeText(`${title} ${shortDescription}`);
+  const tokens = new Set(tokenize(`${title} ${shortDescription}`));
   const matchedRule = CATEGORY_RULES.find((rule) =>
-    rule.keywords.some((keyword) => haystack.includes(normalizeText(keyword))),
+    rule.keywords.some((keyword) => tokens.has(normalizeText(keyword))),
   );
 
   return matchedRule ? { ...matchedRule.labels } : { ...DEFAULT_CATEGORIES };
@@ -206,15 +206,19 @@ function estimatePrice(
     return undefined;
   }
 
-  const keywords = tokenize(`${title} ${shortDescription}`);
+  const keywords = new Set(tokenize(`${title} ${shortDescription}`).filter((keyword) => keyword.length > 2));
+  const normalizedCategories = new Set(
+    Object.values(categorySuggestions)
+      .filter((category): category is string => Boolean(category))
+      .map((category) => normalizeText(category)),
+  );
   const comparablePrices = activeListings
     .filter((listing) => listing.active !== false && Number.isFinite(listing.price) && listing.price > 0)
     .filter((listing) => {
-      const listingText = normalizeText(`${listing.title ?? ""} ${listing.category ?? ""}`);
-      const sameCategory = Object.values(categorySuggestions)
-        .filter((category): category is string => Boolean(category))
-        .some((category) => listingText.includes(normalizeText(category)));
-      const sharedKeyword = keywords.some((keyword) => keyword.length > 2 && listingText.includes(keyword));
+      const listingCategory = normalizeText(listing.category ?? "");
+      const listingTokens = new Set(tokenize(`${listing.title ?? ""} ${listing.category ?? ""}`));
+      const sameCategory = normalizedCategories.has(listingCategory);
+      const sharedKeyword = [...keywords].some((keyword) => listingTokens.has(keyword));
 
       return sameCategory || sharedKeyword;
     })

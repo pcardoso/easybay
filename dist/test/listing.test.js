@@ -78,3 +78,12 @@ const listing_1 = require("../src/listing");
     strict_1.default.equal(suggestion.drafts.length, 1);
     strict_1.default.equal(suggestion.drafts[0]?.category, "Otros");
 });
+(0, node_test_1.default)("falls back to both marketplaces when requestedPlatforms is empty", () => {
+    const suggestion = (0, listing_1.createListingSuggestion)({
+        shortDescription: "Nintendo Switch com dois jogos",
+        photos: ["/photos/switch.jpg"],
+        requestedPlatforms: [],
+    });
+    strict_1.default.deepEqual(Object.keys(suggestion.categorySuggestions).sort(), ["ebay.es", "olx.pt"]);
+    strict_1.default.equal(suggestion.drafts.length, 2);
+});
