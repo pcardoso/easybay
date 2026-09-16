@@ -13,7 +13,7 @@ Minimal TypeScript helpers to prepare sale drafts for `ebay.es` and `olx.pt`.
 ## Usage
 
 ```ts
-import { createListingSuggestion } from "./src";
+import { createListingSuggestion } from "easybay";
 
 const draft = createListingSuggestion({
   shortDescription: "iPhone 13 azul de 128GB con batería al 90%",
