@@ -209,7 +209,7 @@ function estimatePrice(
   const comparablePrices = activeListings
     .filter((listing) => listing.active !== false && Number.isFinite(listing.price) && listing.price > 0)
     .filter((listing) => {
-      const listingTokens = new Set(tokenize(`${listing.title ?? ""} ${listing.category ?? ""}`));
+      const listingTokens = new Set(tokenize(listing.title ?? ""));
       const sharedKeyword = [...keywords].some((keyword) => listingTokens.has(keyword));
 
       return sharedKeyword;
