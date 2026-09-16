@@ -64,6 +64,31 @@ const DEFAULT_CATEGORIES = {
     "olx.pt": "Outros",
 };
 const DEFAULT_PLATFORMS = ["ebay.es", "olx.pt"];
+const PRICE_STOP_WORDS = new Set([
+    "and",
+    "body",
+    "com",
+    "con",
+    "da",
+    "de",
+    "del",
+    "do",
+    "dos",
+    "em",
+    "extra",
+    "for",
+    "kit",
+    "na",
+    "new",
+    "novo",
+    "para",
+    "por",
+    "spare",
+    "the",
+    "used",
+    "usado",
+    "with",
+]);
 function createListingSuggestion(input) {
     const platforms = input.requestedPlatforms?.length
         ? input.requestedPlatforms
@@ -136,7 +161,7 @@ function estimatePrice(title, shortDescription, activeListings) {
     if (!activeListings?.length) {
         return undefined;
     }
-    const keywords = new Set(tokenize(`${title} ${shortDescription}`).filter((keyword) => keyword.length > 2));
+    const keywords = new Set(tokenize(`${title} ${shortDescription}`).filter((keyword) => keyword.length > 2 && !PRICE_STOP_WORDS.has(keyword)));
     const comparablePrices = activeListings
         .filter((listing) => listing.active !== false && Number.isFinite(listing.price) && listing.price > 0)
         .filter((listing) => {

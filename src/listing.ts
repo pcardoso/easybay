@@ -104,6 +104,31 @@ const DEFAULT_CATEGORIES: Record<Marketplace, string> = {
 };
 
 const DEFAULT_PLATFORMS: Marketplace[] = ["ebay.es", "olx.pt"];
+const PRICE_STOP_WORDS = new Set([
+  "and",
+  "body",
+  "com",
+  "con",
+  "da",
+  "de",
+  "del",
+  "do",
+  "dos",
+  "em",
+  "extra",
+  "for",
+  "kit",
+  "na",
+  "new",
+  "novo",
+  "para",
+  "por",
+  "spare",
+  "the",
+  "used",
+  "usado",
+  "with",
+]);
 
 export function createListingSuggestion(input: ListingInput): ListingSuggestion {
   const platforms = input.requestedPlatforms?.length
@@ -205,7 +230,11 @@ function estimatePrice(
     return undefined;
   }
 
-  const keywords = new Set(tokenize(`${title} ${shortDescription}`).filter((keyword) => keyword.length > 2));
+  const keywords = new Set(
+    tokenize(`${title} ${shortDescription}`).filter(
+      (keyword) => keyword.length > 2 && !PRICE_STOP_WORDS.has(keyword),
+    ),
+  );
   const comparablePrices = activeListings
     .filter((listing) => listing.active !== false && Number.isFinite(listing.price) && listing.price > 0)
     .filter((listing) => {
