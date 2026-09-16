@@ -49,7 +49,7 @@ test("falls back to generic categories when no keyword rule matches", () => {
   assert.equal(suggestion.categorySuggestions["olx.pt"], "Outros");
 });
 
-test("estimates a price when only the category matches", () => {
+test("does not estimate a price from category alone", () => {
   const suggestion = createListingSuggestion({
     title: "Wood table vintage",
     shortDescription: "Solid oak dining piece",
@@ -62,9 +62,10 @@ test("estimates a price when only the category matches", () => {
   });
 
   assert.deepEqual(Object.keys(suggestion.categorySuggestions), ["olx.pt"]);
-  assert.equal(suggestion.suggestedPrice, 235);
+  assert.equal(suggestion.suggestedPrice, undefined);
   assert.equal(suggestion.drafts.length, 1);
   assert.equal(suggestion.drafts[0]?.category, "Móveis");
+  assert.equal("price" in suggestion.drafts[0], false);
 });
 
 test("estimates a price when only shared keywords match", () => {

@@ -114,7 +114,7 @@ export function createListingSuggestion(input: ListingInput): ListingSuggestion 
   const categorySuggestions = Object.fromEntries(
     platforms.map((platform) => [platform, allCategorySuggestions[platform]]),
   ) as Partial<Record<Marketplace, string>>;
-  const suggestedPrice = estimatePrice(title, input.shortDescription, categorySuggestions, input.activeListings);
+  const suggestedPrice = estimatePrice(title, input.shortDescription, input.activeListings);
 
   const drafts = platforms.map((platform) => ({
     platform,
@@ -199,7 +199,6 @@ function getCategorySuggestions(title: string, shortDescription: string): Record
 function estimatePrice(
   title: string,
   shortDescription: string,
-  categorySuggestions: Partial<Record<Marketplace, string>>,
   activeListings: ActiveListing[] | undefined,
 ): number | undefined {
   if (!activeListings?.length) {
@@ -207,20 +206,13 @@ function estimatePrice(
   }
 
   const keywords = new Set(tokenize(`${title} ${shortDescription}`).filter((keyword) => keyword.length > 2));
-  const normalizedCategories = new Set(
-    Object.values(categorySuggestions)
-      .filter((category): category is string => Boolean(category))
-      .map((category) => normalizeText(category)),
-  );
   const comparablePrices = activeListings
     .filter((listing) => listing.active !== false && Number.isFinite(listing.price) && listing.price > 0)
     .filter((listing) => {
-      const listingCategory = normalizeText(listing.category ?? "");
       const listingTokens = new Set(tokenize(`${listing.title ?? ""} ${listing.category ?? ""}`));
-      const sameCategory = normalizedCategories.has(listingCategory);
       const sharedKeyword = [...keywords].some((keyword) => listingTokens.has(keyword));
 
-      return sameCategory || sharedKeyword;
+      return sharedKeyword;
     })
     .map((listing) => listing.price)
     .sort((left, right) => left - right);

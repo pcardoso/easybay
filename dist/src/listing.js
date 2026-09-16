@@ -71,7 +71,7 @@ function createListingSuggestion(input) {
     const title = buildTitle(input);
     const allCategorySuggestions = getCategorySuggestions(title, input.shortDescription);
     const categorySuggestions = Object.fromEntries(platforms.map((platform) => [platform, allCategorySuggestions[platform]]));
-    const suggestedPrice = estimatePrice(title, input.shortDescription, categorySuggestions, input.activeListings);
+    const suggestedPrice = estimatePrice(title, input.shortDescription, input.activeListings);
     const drafts = platforms.map((platform) => ({
         platform,
         title,
@@ -132,22 +132,17 @@ function getCategorySuggestions(title, shortDescription) {
     const matchedRule = CATEGORY_RULES.find((rule) => rule.keywords.some((keyword) => tokens.has(normalizeText(keyword))));
     return matchedRule ? { ...matchedRule.labels } : { ...DEFAULT_CATEGORIES };
 }
-function estimatePrice(title, shortDescription, categorySuggestions, activeListings) {
+function estimatePrice(title, shortDescription, activeListings) {
     if (!activeListings?.length) {
         return undefined;
     }
     const keywords = new Set(tokenize(`${title} ${shortDescription}`).filter((keyword) => keyword.length > 2));
-    const normalizedCategories = new Set(Object.values(categorySuggestions)
-        .filter((category) => Boolean(category))
-        .map((category) => normalizeText(category)));
     const comparablePrices = activeListings
         .filter((listing) => listing.active !== false && Number.isFinite(listing.price) && listing.price > 0)
         .filter((listing) => {
-        const listingCategory = normalizeText(listing.category ?? "");
         const listingTokens = new Set(tokenize(`${listing.title ?? ""} ${listing.category ?? ""}`));
-        const sameCategory = normalizedCategories.has(listingCategory);
         const sharedKeyword = [...keywords].some((keyword) => listingTokens.has(keyword));
-        return sameCategory || sharedKeyword;
+        return sharedKeyword;
     })
         .map((listing) => listing.price)
         .sort((left, right) => left - right);

@@ -46,7 +46,7 @@ const listing_1 = require("../src/listing");
     strict_1.default.equal(suggestion.categorySuggestions["ebay.es"], "Otros");
     strict_1.default.equal(suggestion.categorySuggestions["olx.pt"], "Outros");
 });
-(0, node_test_1.default)("estimates a price when only the category matches", () => {
+(0, node_test_1.default)("does not estimate a price from category alone", () => {
     const suggestion = (0, listing_1.createListingSuggestion)({
         title: "Wood table vintage",
         shortDescription: "Solid oak dining piece",
@@ -58,9 +58,10 @@ const listing_1 = require("../src/listing");
         ],
     });
     strict_1.default.deepEqual(Object.keys(suggestion.categorySuggestions), ["olx.pt"]);
-    strict_1.default.equal(suggestion.suggestedPrice, 235);
+    strict_1.default.equal(suggestion.suggestedPrice, undefined);
     strict_1.default.equal(suggestion.drafts.length, 1);
     strict_1.default.equal(suggestion.drafts[0]?.category, "Móveis");
+    strict_1.default.equal("price" in suggestion.drafts[0], false);
 });
 (0, node_test_1.default)("estimates a price when only shared keywords match", () => {
     const suggestion = (0, listing_1.createListingSuggestion)({
