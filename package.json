@@ -1,0 +1,23 @@
+{
+  "name": "easybay",
+  "version": "1.0.0",
+  "description": "TypeScript helpers to prepare sale drafts for ebay.es and olx.pt",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "npm run build && node --test dist/test/listing.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://localhost:26831/pcardoso/easybay"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.20.3",
+    "typescript": "^7.0.2"
+  }
+}
