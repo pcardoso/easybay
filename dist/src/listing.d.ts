@@ -26,7 +26,7 @@ export interface ListingDraft {
 export interface ListingSuggestion {
     title: string;
     suggestedPrice?: number;
-    categorySuggestions: Record<Marketplace, string>;
+    categorySuggestions: Partial<Record<Marketplace, string>>;
     drafts: ListingDraft[];
 }
 export declare function createListingSuggestion(input: ListingInput): ListingSuggestion;

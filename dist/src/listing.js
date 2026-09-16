@@ -69,13 +69,14 @@ function createListingSuggestion(input) {
         ? input.requestedPlatforms
         : DEFAULT_PLATFORMS;
     const title = buildTitle(input);
-    const categorySuggestions = getCategorySuggestions(title, input.shortDescription);
+    const allCategorySuggestions = getCategorySuggestions(title, input.shortDescription);
+    const categorySuggestions = Object.fromEntries(platforms.map((platform) => [platform, allCategorySuggestions[platform]]));
     const suggestedPrice = estimatePrice(title, input.shortDescription, categorySuggestions, input.activeListings);
     const drafts = platforms.map((platform) => ({
         platform,
         title,
-        description: buildDescription(platform, input, title, categorySuggestions[platform]),
-        category: categorySuggestions[platform],
+        description: buildDescription(platform, input, title, categorySuggestions[platform] ?? DEFAULT_CATEGORIES[platform]),
+        category: categorySuggestions[platform] ?? DEFAULT_CATEGORIES[platform],
         photos: [...input.photos],
         currency: "EUR",
         ...(suggestedPrice === undefined ? {} : { price: suggestedPrice }),
@@ -129,7 +130,7 @@ function buildDescription(platform, input, title, category) {
 function getCategorySuggestions(title, shortDescription) {
     const haystack = normalizeText(`${title} ${shortDescription}`);
     const matchedRule = CATEGORY_RULES.find((rule) => rule.keywords.some((keyword) => haystack.includes(normalizeText(keyword))));
-    return matchedRule?.labels ?? DEFAULT_CATEGORIES;
+    return matchedRule ? { ...matchedRule.labels } : { ...DEFAULT_CATEGORIES };
 }
 function estimatePrice(title, shortDescription, categorySuggestions, activeListings) {
     if (!activeListings?.length) {
@@ -140,7 +141,9 @@ function estimatePrice(title, shortDescription, categorySuggestions, activeListi
         .filter((listing) => listing.active !== false && Number.isFinite(listing.price) && listing.price > 0)
         .filter((listing) => {
         const listingText = normalizeText(`${listing.title ?? ""} ${listing.category ?? ""}`);
-        const sameCategory = Object.values(categorySuggestions).some((category) => listingText.includes(normalizeText(category)));
+        const sameCategory = Object.values(categorySuggestions)
+            .filter((category) => Boolean(category))
+            .some((category) => listingText.includes(normalizeText(category)));
         const sharedKeyword = keywords.some((keyword) => keyword.length > 2 && listingText.includes(keyword));
         return sameCategory || sharedKeyword;
     })

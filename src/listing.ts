@@ -30,7 +30,7 @@ export interface ListingDraft {
 export interface ListingSuggestion {
   title: string;
   suggestedPrice?: number;
-  categorySuggestions: Record<Marketplace, string>;
+  categorySuggestions: Partial<Record<Marketplace, string>>;
   drafts: ListingDraft[];
 }
 
@@ -110,14 +110,17 @@ export function createListingSuggestion(input: ListingInput): ListingSuggestion 
     ? input.requestedPlatforms
     : DEFAULT_PLATFORMS;
   const title = buildTitle(input);
-  const categorySuggestions = getCategorySuggestions(title, input.shortDescription);
+  const allCategorySuggestions = getCategorySuggestions(title, input.shortDescription);
+  const categorySuggestions = Object.fromEntries(
+    platforms.map((platform) => [platform, allCategorySuggestions[platform]]),
+  ) as Partial<Record<Marketplace, string>>;
   const suggestedPrice = estimatePrice(title, input.shortDescription, categorySuggestions, input.activeListings);
 
   const drafts = platforms.map((platform) => ({
     platform,
     title,
-    description: buildDescription(platform, input, title, categorySuggestions[platform]),
-    category: categorySuggestions[platform],
+    description: buildDescription(platform, input, title, categorySuggestions[platform] ?? DEFAULT_CATEGORIES[platform]),
+    category: categorySuggestions[platform] ?? DEFAULT_CATEGORIES[platform],
     photos: [...input.photos],
     currency: "EUR" as const,
     ...(suggestedPrice === undefined ? {} : { price: suggestedPrice }),
@@ -190,13 +193,13 @@ function getCategorySuggestions(title: string, shortDescription: string): Record
     rule.keywords.some((keyword) => haystack.includes(normalizeText(keyword))),
   );
 
-  return matchedRule?.labels ?? DEFAULT_CATEGORIES;
+  return matchedRule ? { ...matchedRule.labels } : { ...DEFAULT_CATEGORIES };
 }
 
 function estimatePrice(
   title: string,
   shortDescription: string,
-  categorySuggestions: Record<Marketplace, string>,
+  categorySuggestions: Partial<Record<Marketplace, string>>,
   activeListings: ActiveListing[] | undefined,
 ): number | undefined {
   if (!activeListings?.length) {
@@ -208,9 +211,9 @@ function estimatePrice(
     .filter((listing) => listing.active !== false && Number.isFinite(listing.price) && listing.price > 0)
     .filter((listing) => {
       const listingText = normalizeText(`${listing.title ?? ""} ${listing.category ?? ""}`);
-      const sameCategory = Object.values(categorySuggestions).some((category) =>
-        listingText.includes(normalizeText(category)),
-      );
+      const sameCategory = Object.values(categorySuggestions)
+        .filter((category): category is string => Boolean(category))
+        .some((category) => listingText.includes(normalizeText(category)));
       const sharedKeyword = keywords.some((keyword) => keyword.length > 2 && listingText.includes(keyword));
 
       return sameCategory || sharedKeyword;

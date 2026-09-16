@@ -48,3 +48,39 @@ test("falls back to generic categories when no keyword rule matches", () => {
   assert.equal(suggestion.categorySuggestions["ebay.es"], "Otros");
   assert.equal(suggestion.categorySuggestions["olx.pt"], "Outros");
 });
+
+test("estimates a price when only the category matches", () => {
+  const suggestion = createListingSuggestion({
+    title: "Wood table vintage",
+    shortDescription: "Solid oak dining piece",
+    photos: ["/photos/table.jpg"],
+    requestedPlatforms: ["olx.pt"],
+    activeListings: [
+      { title: "Oferta imperdível", price: 210, active: true, category: "Móveis" },
+      { title: "Outra oferta", price: 260, active: true, category: "Móveis" },
+    ],
+  });
+
+  assert.deepEqual(Object.keys(suggestion.categorySuggestions), ["olx.pt"]);
+  assert.equal(suggestion.suggestedPrice, 235);
+  assert.equal(suggestion.drafts.length, 1);
+  assert.equal(suggestion.drafts[0]?.category, "Móveis");
+});
+
+test("estimates a price when only shared keywords match", () => {
+  const suggestion = createListingSuggestion({
+    shortDescription: "Canon mirrorless body with spare battery",
+    photos: ["/photos/canon.jpg"],
+    requestedPlatforms: ["ebay.es"],
+    activeListings: [
+      { title: "Canon EOS usada", price: 520, active: true, category: "Fotografía" },
+      { title: "Canon mirrorless kit", price: 560, active: true, category: "Cámaras" },
+      { title: "Oferta sem relação", price: 999, active: true, category: "Móveis" },
+    ],
+  });
+
+  assert.deepEqual(Object.keys(suggestion.categorySuggestions), ["ebay.es"]);
+  assert.equal(suggestion.suggestedPrice, 540);
+  assert.equal(suggestion.drafts.length, 1);
+  assert.equal(suggestion.drafts[0]?.category, "Otros");
+});

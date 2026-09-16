@@ -46,3 +46,35 @@ const listing_1 = require("../src/listing");
     strict_1.default.equal(suggestion.categorySuggestions["ebay.es"], "Otros");
     strict_1.default.equal(suggestion.categorySuggestions["olx.pt"], "Outros");
 });
+(0, node_test_1.default)("estimates a price when only the category matches", () => {
+    const suggestion = (0, listing_1.createListingSuggestion)({
+        title: "Wood table vintage",
+        shortDescription: "Solid oak dining piece",
+        photos: ["/photos/table.jpg"],
+        requestedPlatforms: ["olx.pt"],
+        activeListings: [
+            { title: "Oferta imperdível", price: 210, active: true, category: "Móveis" },
+            { title: "Outra oferta", price: 260, active: true, category: "Móveis" },
+        ],
+    });
+    strict_1.default.deepEqual(Object.keys(suggestion.categorySuggestions), ["olx.pt"]);
+    strict_1.default.equal(suggestion.suggestedPrice, 235);
+    strict_1.default.equal(suggestion.drafts.length, 1);
+    strict_1.default.equal(suggestion.drafts[0]?.category, "Móveis");
+});
+(0, node_test_1.default)("estimates a price when only shared keywords match", () => {
+    const suggestion = (0, listing_1.createListingSuggestion)({
+        shortDescription: "Canon mirrorless body with spare battery",
+        photos: ["/photos/canon.jpg"],
+        requestedPlatforms: ["ebay.es"],
+        activeListings: [
+            { title: "Canon EOS usada", price: 520, active: true, category: "Fotografía" },
+            { title: "Canon mirrorless kit", price: 560, active: true, category: "Cámaras" },
+            { title: "Oferta sem relação", price: 999, active: true, category: "Móveis" },
+        ],
+    });
+    strict_1.default.deepEqual(Object.keys(suggestion.categorySuggestions), ["ebay.es"]);
+    strict_1.default.equal(suggestion.suggestedPrice, 540);
+    strict_1.default.equal(suggestion.drafts.length, 1);
+    strict_1.default.equal(suggestion.drafts[0]?.category, "Otros");
+});
